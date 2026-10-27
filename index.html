@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LRU Cache Visualizer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="hero">
+  <div class="hero-text">
+    <h1>LRU Cache Visualizer</h1>
+    <p>Least Recently Used (LRU) evicts the item that has gone unused the longest. A hash map finds any key in O(1), and a doubly linked list orders keys from most to least recently used, so moving or removing a node is also O(1).</p>
+  </div>
+  <section class="stats" aria-label="Cache statistics">
+    <div class="stat"><span>Capacity</span><strong id="sCap">3</strong></div>
+    <div class="stat"><span>Size</span><strong id="sSize">0</strong></div>
+    <div class="stat good"><span>Hits</span><strong id="sHits">0</strong></div>
+    <div class="stat bad"><span>Misses</span><strong id="sMiss">0</strong></div>
+    <div class="stat bad"><span>Evictions</span><strong id="sEvict">0</strong></div>
+    <div class="stat good"><span>Hit rate</span><strong id="sRate">—</strong></div>
+  </section>
+  <button type="button" class="btn ghost reset-btn">Reset</button>
+</header>
+
+<main>
+  <div class="two-col">
+    <section class="card" aria-labelledby="h-op">
+      <h2 id="h-op">Interactive cache</h2>
+      <div class="field-row">
+        <label for="capInput">Capacity (1–12)</label>
+        <input id="capInput" type="number" min="1" max="12" value="3">
+        <button type="button" class="btn ghost" id="capBtn">Set capacity</button>
+      </div>
+      <div class="field-row">
+        <label for="keyInput">Key</label>
+        <input id="keyInput" type="text" maxlength="12" autocomplete="off" placeholder="e.g. A">
+        <label for="valInput">Value</label>
+        <input id="valInput" type="text" maxlength="20" autocomplete="off" placeholder="e.g. 10">
+      </div>
+      <div class="field-row">
+        <button type="button" class="btn" id="getBtn">GET</button>
+        <button type="button" class="btn" id="putBtn">PUT</button>
+      </div>
+      <p id="message" class="message" role="status" aria-live="polite">Set a capacity, then try GET and PUT.</p>
+    </section>
+
+    <section class="card" aria-labelledby="h-demo">
+      <h2 id="h-demo">Demo</h2>
+      <p class="muted">A fixed sequence on a capacity-3 cache. It shows a hit, a miss, an update and two evictions.</p>
+      <ol id="demoList" class="demo-list"></ol>
+      <div class="field-row">
+        <button type="button" class="btn" id="runDemo">Run Demo</button>
+        <button type="button" class="btn ghost" id="stepDemo">Step</button>
+        <button type="button" class="btn ghost reset-btn">Reset</button>
+        <button type="button" class="btn ghost" id="clearHist">Clear History</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="h-vis">
+    <h2 id="h-vis">Cache state</h2>
+    <div class="ends"><span>Front · MRU (most recent)</span><span>Tail · LRU (evicted first)</span></div>
+    <div id="chain" class="chain" aria-live="polite"></div>
+    <div class="legend">
+      <span><i class="dot good"></i>moved or inserted</span>
+      <span><i class="dot bad"></i>evicted</span>
+      <span><i class="dot empty"></i>free slot</span>
+    </div>
+  </section>
+
+  <div class="two-col">
+    <section class="card" aria-labelledby="h-steps">
+      <h2 id="h-steps">Latest operation, step by step</h2>
+      <ol id="steps" class="steps"><li>Run an operation to see its steps.</li></ol>
+    </section>
+    <section class="card" aria-labelledby="h-cx">
+      <h2 id="h-cx">Complexity</h2>
+      <dl class="cx">
+        <div><dt>GET</dt><dd>O(1) average</dd></div>
+        <div><dt>PUT</dt><dd>O(1) average</dd></div>
+        <div><dt>Space</dt><dd>O(capacity)</dd></div>
+      </dl>
+      <p class="muted">Map lookup is O(1) average. Detaching and re-attaching a doubly linked list node only touches its neighbours.</p>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="h-hist">
+    <h2 id="h-hist">Operation history</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>#</th><th>Operation</th><th>Key</th><th>Result</th><th>Status</th></tr></thead>
+        <tbody id="histBody"></tbody>
+      </table>
+    </div>
+    <p id="histEmpty" class="muted">No operations yet.</p>
+  </section>
+
+  <section class="card" aria-labelledby="h-perf">
+    <h2 id="h-perf">Performance analyzer</h2>
+    <p class="muted">Each request is a GET; on a miss the item is fetched and PUT into the cache. The same sequence is replayed for every selected capacity.</p>
+    <label for="seq">Request sequence (keys separated by spaces or commas)</label>
+    <textarea id="seq" rows="3"></textarea>
+    <fieldset class="caps"><legend>Capacities to compare</legend><div id="capChecks"></div></fieldset>
+    <div class="field-row">
+      <button type="button" class="btn" id="analyzeBtn">Analyze</button>
+      <button type="button" class="btn ghost" id="genBtn">Generate sample sequence</button>
+    </div>
+    <p id="perfMsg" class="message" role="status"></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Capacity</th><th>Hits</th><th>Misses</th><th>Evictions</th><th>LRU hit rate</th><th>LFU hit rate</th></tr></thead>
+        <tbody id="perfBody"></tbody>
+      </table>
+    </div>
+    <div class="legend"><span><i class="dot good"></i>LRU hit rate</span><span><i class="dot lfu"></i>LFU hit rate</span></div>
+    <svg id="chart" viewBox="0 0 600 240" role="img" aria-label="Bar chart of hit rate by cache capacity for LRU and LFU"></svg>
+    <h3>LRU vs LFU</h3>
+    <p id="compare" class="muted"></p>
+    <p class="note">LFU here is a simplified comparison (evicts the lowest access count, ties broken by least recent use, O(n) eviction). It is separate from the main O(1) LRU engine.</p>
+  </section>
+</main>
+<footer>DAA AAT project · LRU Cache with O(1) operations · HashMap + Doubly Linked List</footer>
+<script src="app.js"></script>
+</body>
+</html>
